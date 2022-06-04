@@ -1,0 +1,5 @@
+- hosts: mysql-slv
+  gather_facts: yes
+  become: false
+  roles:
+    - mysql-slv

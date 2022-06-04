@@ -1,0 +1,4 @@
+---
+
+to_bin: files/node_exporter
+to_sys: files/node_exporter.service

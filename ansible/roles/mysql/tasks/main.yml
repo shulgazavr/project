@@ -1,0 +1,48 @@
+---
+- name: Download sources
+  get_url:
+    url: https://repo.mysql.com/mysql80-community-release-el7-3.noarch.rpm
+    dest: /tmp
+
+- name: Add key
+  command: /usr/bin/rpm --import https://repo.mysql.com/RPM-GPG-KEY-mysql-2022
+
+- name: Install package
+  yum:
+    name: /tmp/mysql80-community-release-el7-3.noarch.rpm
+    state: present
+
+- name: Install MySQL
+  yum: name=mysql-server state=installed
+
+- name: mysql systemd
+  systemd:
+    name: mysqld
+    enabled: yes
+    state: started
+
+- name: Change root password
+  shell: |
+    password_match=`awk '/A temporary password is generated for/ {a=$0} END{ print a }' /var/log/mysqld.log | awk '{print $(NF)}'`
+    echo $password_match
+    mysql -uroot -p$password_match --connect-expired-password -e "ALTER USER 'root'@'localhost' IDENTIFIED BY '{{ psswd_root }}'; flush privileges; "
+
+
+- name: Removes all anonymous user accounts
+  shell:
+    mysql -uroot -p{{ psswd_root }} -e "DELETE FROM mysql.user WHERE User=''"
+
+#- name: Create user for slave server
+#  mysql_user:
+#    name: slv
+#    host: 192.168.31.103
+#    password: "{{ psswd_slv }}"
+#    priv:
+#      '*.*:REPLICATION SLAVE'
+#    state: present
+
+
+- name: Create user for slave server
+  shell: |
+    mysql -uroot -p{{ psswd_root }} -e "CREATE USER 'slv'@'192.168.31.103' IDENTIFIED BY '{{psswd_slv}}'; GRANT REPLICATION SLAVE ON *.* TO 'slv'@'192.168.31.103'; "
+

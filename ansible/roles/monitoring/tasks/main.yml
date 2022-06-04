@@ -1,0 +1,63 @@
+---
+
+- name: Create user prometheus
+  user:
+    name: prometheus
+    create_home: no
+    shell: /usr/sbin/nologin
+
+- name: Copy to /etc/
+  copy:
+    src: '{{ to_etc }}'
+    dest: /etc/
+    owner: prometheus
+    group: prometheus
+    mode: 'preserve'
+
+- name: Copy to /usr/local/bin/
+  copy:
+    src: '{{ to_bin }}'
+    dest: /usr/local/bin/
+    owner: prometheus
+    group: prometheus
+    mode: 'preserve'
+
+- name: Copy to systemd
+  copy:
+    src: '{{ to_sys }}'
+    dest: /etc/systemd/system/
+    owner: root
+    mode: 'preserve'
+
+- name: Create /var/lib/prometheus
+  file:
+    path: /var/lib/prometheus
+    mode: '0755'
+    owner: prometheus
+    group: prometheus
+    state: directory
+
+- name: Start service prometheus
+  systemd:
+    daemon_reload: yes
+    name: prometheus
+    enabled: yes
+    state: started
+
+- name: Copy Repo
+  copy:
+    src: '{{ to_rep }}'
+    dest: /etc/yum.repos.d/
+    owner: prometheus
+    mode: 'preserve'
+
+- name: Install Grafana
+  yum:
+    name: grafana
+
+- name: Start service Grafana
+  systemd:
+    daemon_reload: yes
+    name: grafana-server
+    enabled: yes
+    state: started

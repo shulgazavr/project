@@ -1,0 +1,4 @@
+---
+
+cnfg_files: files/httpd/
+web_files: files/www

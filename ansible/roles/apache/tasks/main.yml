@@ -1,0 +1,35 @@
+---
+- name: Install Apache2
+  yum:
+    name=httpd
+    state=present
+  notify:
+    - httpd systemd
+
+- name: httpd systemd
+  systemd:
+    name: httpd
+    enabled: yes
+    state: started
+
+- name: copy configuration files
+  copy:
+    src: '{{ cnfg_files }}'
+    dest: /etc/httpd/
+    owner: root
+    mode: 'preserve'
+
+- name: copy web files
+  copy:
+    src: '{{ web_files }}'
+    dest: /srv/
+    owner: root
+    mode: 'preserve'
+  notify:
+      - restart httpd
+
+- name: restart httpd
+  service:
+    name: httpd
+    state: restarted
+  register: err_hosts

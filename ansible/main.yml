@@ -1,0 +1,27 @@
+---
+- name: Install MySQL Repo
+  command: /usr/bin/rpm -Uvh https://repo.mysql.com/mysql80-community-release-el7-3.noarch.rpm
+
+- name: Enable Repo
+  command: /usr/bin/sed -i 's/enabled=1/enabled=0/' /etc/yum.repos.d/mysql-community.repo
+
+- name: Add key
+  command: /usr/bin/rpm --import https://repo.mysql.com/RPM-GPG-KEY-mysql-2022
+
+- name: Install MySQL Server
+  yum:
+    name=mysql-community-server
+    state=present
+
+- name: Install MySQL-python
+  yum:
+    name=mysql-python
+    state=present
+
+- name: mysql systemd
+  systemd:
+    name: mysqld
+    enable: yes
+    state: started
+
+

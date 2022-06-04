@@ -1,0 +1,5 @@
+- name: restart mysqld
+  service:
+    name: mysqld
+    state: restarted
+  register: err_hosts

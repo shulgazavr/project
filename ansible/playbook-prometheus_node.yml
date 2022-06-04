@@ -1,0 +1,5 @@
+- hosts: prometheus_node
+  gather_facts: yes
+  become: false
+  roles:
+    - prometheus_node

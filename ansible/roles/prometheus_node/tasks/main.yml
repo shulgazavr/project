@@ -1,0 +1,30 @@
+---
+
+- name: Create user node_exporter
+  user:
+    name: node_exporter
+    create_home: no
+    shell: /usr/sbin/false
+
+- name: Copy to /usr/local/bin/
+  copy:
+    src: '{{ to_bin }}'
+    dest: /usr/local/bin/
+    owner: node_exporter
+    group: node_exporter
+    mode: 'preserve'
+
+- name: Copy to systemd
+  copy:
+    src: '{{ to_sys }}'
+    dest: /etc/systemd/system/
+    owner: root
+    mode: 'preserve'
+
+- name: Start service node_exporter
+  systemd:
+    daemon_reload: yes
+    name: node_exporter
+    enabled: yes
+    state: started
+

@@ -1,0 +1,77 @@
+---
+- name: Download sources
+  get_url:
+    url: https://repo.mysql.com/mysql80-community-release-el7-3.noarch.rpm
+    dest: /tmp
+
+- name: Install package
+  yum:
+    name: /tmp/mysql80-community-release-el7-3.noarch.rpm
+    state: present
+
+- name: Add key
+  command: /usr/bin/rpm --import https://repo.mysql.com/RPM-GPG-KEY-mysql-2022
+
+- name: Install MySQL
+  yum:
+    name=mysql-server
+    state=installed
+
+- name: mysql systemd
+  systemd:
+    name: mysqld
+    enabled: yes
+    state: started
+
+- name: Change root password
+  shell: |
+    password_match=`awk '/A temporary password is generated for/ {a=$0} END{ print a }' /var/log/mysqld.log | awk '{print $(NF)}'`
+    echo $password_match
+    mysql -uroot -p$password_match --connect-expired-password -e "ALTER USER 'root'@'localhost' IDENTIFIED BY '{{ psswd_root }}'; flush privileges; "
+
+
+- name: Removes all anonymous user accounts
+  shell:
+    mysql -uroot -p{{ psswd_root }} -e "DELETE FROM mysql.user WHERE User=''"
+
+- name: Copy my.conf
+  copy:
+    src: '{{ conf_files }}'
+    dest: /etc/
+    owner: root
+    mode: 'preserve'
+  notify:
+    - restart mysqld
+
+- name: Restart mysqld
+  service:
+    name: mysqld
+    state: restarted
+  register: err_hosts
+
+
+- name: Change master
+  shell: |
+    mysql -uroot -p{{ psswd_root }} -e "STOP SLAVE; CHANGE MASTER TO MASTER_HOST='192.168.31.102', MASTER_USER='slv', MASTER_PASSWORD='{{ psswd_slv }}', MASTER_LOG_FILE='{{ cnt_binlog }}', MASTER_LOG_POS="{{ cnt_pos }}", GET_MASTER_PUBLIC_KEY = 1; START SLAVE; "
+
+
+-name: Copy bckp script
+  copy:
+    src: '{{ bckp }}'
+    dest: /usr/local/bin/
+    owner: root
+    mode: 'preserve'
+
+- name: Create /usr/local/bckp_mysql
+  file:
+    path: /usr/local/bckp_mysql
+    mode: '0755'
+    owner: root
+    state: directory
+
+-name: Create cron job
+ cron:
+     cron_file: 'daily_bckp_bases'
+     user: root
+     job: '/usr/local/bckp_mysql/bckp_mysql.sh'
+

@@ -1,0 +1,6 @@
+---
+
+to_bin: files/bin/
+to_etc: files/prometheus
+to_sys: files/prometheus.service
+to_rep: files/grafana.repo

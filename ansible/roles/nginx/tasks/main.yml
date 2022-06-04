@@ -1,0 +1,28 @@
+---
+- name: Install Nginx
+  yum:
+    name=nginx
+    state=latest
+  notify:
+    - nginx systemd
+
+- name: nginx systemd
+  systemd:
+    name: nginx
+    enabled: yes
+    state: started
+
+- name: copy configuration files
+  copy:
+    src: '{{ cnfg_files }}'
+    dest: /etc/nginx/
+    owner: root
+    mode: 'preserve'
+  notify:
+    - restart nginx
+
+- name: restart nginx
+  service:
+    name: nginx
+    state: restarted
+  register: err_hosts

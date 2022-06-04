@@ -1,0 +1,5 @@
+- hosts: monitoring
+  gather_facts: yes
+  become: false
+  roles:
+    - monitoring
